@@ -43,7 +43,6 @@ public class Main {
         int clientMoney = client.getMoney();
         client.setMoney(clientMoney - price);
         takings += price;
-
     }
 
     public static void getTicket(Client client, Ticket ticket) {
