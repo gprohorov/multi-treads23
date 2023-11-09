@@ -22,14 +22,14 @@ public class Main {
             new Ticket(1, 120, false),
             new Ticket(2, 130,false),
             new Ticket(3, 150,false),
-            new Ticket(4, 110,true),
-            new Ticket(5,50, false)
+            new Ticket(4, 110,false),
+            new Ticket(5,50, true)
     ));
     public static int takings = 0;
     public static Ticket selectTicket(List<Ticket> tickets) {
         Random random = new Random();
         try {
-            TimeUnit.SECONDS.sleep(random.nextInt(5,10));
+            TimeUnit.SECONDS.sleep(random.nextInt(1, 10));
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
@@ -52,13 +52,19 @@ public class Main {
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
-    public static void payAndGetTicket(Client client) {
+    public static synchronized void  payAndGetTicket(Client client) {
         Ticket ticket = selectTicket(tickets);
         if (ticket == null) return;
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
         pay(client, ticket);
         getTicket(client, ticket);
+
         System.out.println(client.getName() + " "
-                + client.getTicket().getPlace() + " place");
+                + ticket.getPlace() + " place");
     }
     public static void useThread(Client client, int priority) {
         Runnable task = () -> {
