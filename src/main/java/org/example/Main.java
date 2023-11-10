@@ -74,7 +74,8 @@ public class Main {
         sellOut.forEach(System.out::println);
         System.out.println("------------------------");
         System.out.println(takings);
-
+        System.out.println("------------------------");
+        clients.forEach(System.out::println);
 
     }
 }
