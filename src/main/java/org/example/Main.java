@@ -35,7 +35,7 @@ public class Main {
     }
     public static int takings = 0;
     public static Ticket selectTicket(List<Ticket> tickets) {
-
+        randomDelay(5,9);
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
                 .findFirst()
