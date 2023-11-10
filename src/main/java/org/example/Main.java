@@ -26,13 +26,34 @@ public class Main {
             new Ticket(5,50, true)
     ));
     public static int takings = 0;
-    public static Ticket selectTicket(List<Ticket> tickets) {
+
+    public static void randomDelay(int from, int to) {
         Random random = new Random();
+        int delay = 0;
+        if (from == to) {
+            delay = from;
+        } else {
+            delay = random.nextInt(from, to);
+        }
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(delay);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
+    }
+    public static void delay(int interval) {
+        randomDelay(interval, interval);
+    }
+    public static void delayMs(int interval) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(interval);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public static Ticket selectTicket(List<Ticket> tickets) {
+
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
                 .findFirst()
@@ -51,14 +72,10 @@ public class Main {
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
-    public static  void  payAndGetTicket(Client client) {
+    public static void  payAndGetTicket(Client client) {
         Ticket ticket = selectTicket(tickets);
         if (ticket == null) return;
-        try {
-           TimeUnit.SECONDS.sleep(2);
-       } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
+       // delay(10);
         pay(client, ticket);
         getTicket(client, ticket);
 
@@ -67,18 +84,11 @@ public class Main {
     }
     public static void useThread(Client client) {
         Runnable task = () -> {
-            try {
-                TimeUnit.SECONDS.sleep(5);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-
             payAndGetTicket(client);
         };
         Thread thread = new Thread(task, client.getName());
-        if (client.getName().equals("Freddie")) { thread.setPriority(9); }
         thread.start();
-        System.out.println(thread.getName() + " : " +thread.getPriority() + " started");
+        System.out.println(thread.getName() + " started");
     }
 
     public static void main(String[] args) {
@@ -98,12 +108,7 @@ public class Main {
 
         }
         System.out.println("-------------------------");
-//        try {
-//            TimeUnit.SECONDS.sleep(30);
-//        } catch (InterruptedException ie) {
-//            Thread.currentThread().interrupt();
-//        }
-//        sellOut.forEach(System.out::println);
+
 
     }
 }
