@@ -22,17 +22,20 @@ public class Main {
             new Ticket(1, 120, false),
             new Ticket(2, 130,false),
             new Ticket(3, 150,false),
-            new Ticket(4, 110,true),
-            new Ticket(5,50, false)
+            new Ticket(4, 110,false),
+            new Ticket(5,50, true)
     ));
-    public static int takings = 0;
-    public static Ticket selectTicket(List<Ticket> tickets) {
+    public static void randomDelay(int from, int to) {
         Random random = new Random();
         try {
-            TimeUnit.SECONDS.sleep(random.nextInt(5,10));
+            TimeUnit.SECONDS.sleep(random.nextInt(from,to));
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
+    }
+    public static int takings = 0;
+    public static Ticket selectTicket(List<Ticket> tickets) {
+
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
                 .findFirst()
@@ -60,12 +63,11 @@ public class Main {
         System.out.println(client.getName() + " "
                 + client.getTicket().getPlace() + " place");
     }
-    public static void useThread(Client client, int priority) {
+    public static void useThread(Client client) {
         Runnable task = () -> {
             payAndGetTicket(client);
         };
         Thread thread = new Thread(task, client.getName());
-        thread.setPriority(priority);
         thread.start();
         System.out.println(thread.getName() + " strated");
     }
@@ -82,16 +84,13 @@ public class Main {
                 new Client("Freddie", 1000)
         ));
 
+
+
         for (int i = 0; i < clients.size(); i++) {
-            useThread(clients.get(i), 1);
+            useThread(clients.get(i));
         }
         System.out.println("-------------------------");
-//        try {
-//            TimeUnit.SECONDS.sleep(30);
-//        } catch (InterruptedException ie) {
-//            Thread.currentThread().interrupt();
-//        }
-//        sellOut.forEach(System.out::println);
+
 
     }
 }
