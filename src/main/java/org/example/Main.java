@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
     public static List<Ticket> sellOut = new ArrayList<>();
 
-    public static List<Ticket> tickets = new ArrayList<>(Arrays.asList(
+    public static volatile List<Ticket> tickets = new ArrayList<>(Arrays.asList(
             new Ticket(1, 120, false),
             new Ticket(2, 130,false),
             new Ticket(3, 150,false),
@@ -29,7 +29,7 @@ public class Main {
     public static Ticket selectTicket(List<Ticket> tickets) {
         Random random = new Random();
         try {
-            TimeUnit.SECONDS.sleep(random.nextInt(1, 10));
+            TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
@@ -51,12 +51,12 @@ public class Main {
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
-    public static synchronized void  payAndGetTicket(Client client) {
+    public static  void  payAndGetTicket(Client client) {
         Ticket ticket = selectTicket(tickets);
         if (ticket == null) return;
         try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException ie) {
+           TimeUnit.SECONDS.sleep(2);
+       } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
         pay(client, ticket);
@@ -65,14 +65,20 @@ public class Main {
         System.out.println(client.getName() + " "
                 + ticket.getPlace() + " place");
     }
-    public static void useThread(Client client, int priority) {
+    public static void useThread(Client client) {
         Runnable task = () -> {
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+
             payAndGetTicket(client);
         };
         Thread thread = new Thread(task, client.getName());
-        thread.setPriority(priority);
+        if (client.getName().equals("Freddie")) { thread.setPriority(9); }
         thread.start();
-        System.out.println(thread.getName() + " strated");
+        System.out.println(thread.getName() + " : " +thread.getPriority() + " started");
     }
 
     public static void main(String[] args) {
@@ -88,7 +94,8 @@ public class Main {
         ));
 
         for (int i = 0; i < clients.size(); i++) {
-            useThread(clients.get(i), 1);
+            useThread(clients.get(i));
+
         }
         System.out.println("-------------------------");
 //        try {
