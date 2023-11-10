@@ -27,15 +27,21 @@ public class Main {
     ));
     public static void randomDelay(int from, int to) {
         Random random = new Random();
+        int delay = 0;
+        if (from == to) {
+            delay = from;
+        } else {
+            delay = random.nextInt(from, to);
+        }
         try {
-            TimeUnit.SECONDS.sleep(random.nextInt(from,to));
+            TimeUnit.SECONDS.sleep(delay);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
     }
     public static int takings = 0;
     public static Ticket selectTicket(List<Ticket> tickets) {
-        randomDelay(5,9);
+  // randomDelay(5,5);
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
                 .findFirst()
@@ -44,6 +50,7 @@ public class Main {
     public static void pay(Client client, Ticket ticket) {
         int price = ticket.getPrice();
         int clientMoney = client.getMoney();
+      // randomDelay(5,5);
         client.setMoney(clientMoney - price);
         takings += price;
 
@@ -65,16 +72,16 @@ public class Main {
     }
     public static void useThread(Client client) {
         Runnable task = () -> {
+         //   randomDelay(5,5);
             payAndGetTicket(client);
         };
         Thread thread = new Thread(task, client.getName());
+      if (client.getName().equals("Freddie")) thread.setPriority(9);
         thread.start();
-        System.out.println(thread.getName() + " strated");
+        System.out.println(thread.getName() +  " - " +thread.getPriority() + " strated");
     }
 
     public static void main(String[] args) {
-        System.out.println("Hello world!");
-
 
         List<Client> clients = new ArrayList<>(Arrays.asList(
                 new Client("John", 500),
