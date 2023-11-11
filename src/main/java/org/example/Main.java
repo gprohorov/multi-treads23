@@ -18,13 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
     public static List<Ticket> sellOut = new ArrayList<>();
 
-    public static volatile List<Ticket> tickets = new ArrayList<>(Arrays.asList(
-            new Ticket(1, 120, false),
-            new Ticket(2, 130,false),
-            new Ticket(3, 150,false),
-            new Ticket(4, 110,false),
-            new Ticket(5,50, true)
-    ));
+    public static  volatile List<Ticket> tickets;
     public static int takings = 0;
 
     public static void randomDelay(int from, int to) {
@@ -68,13 +62,13 @@ public class Main {
     }
 
     public static void getTicket(Client client, Ticket ticket) {
-        delayMs(10);
+         delay(5);
         tickets.remove(ticket);
         ticket.setSold(true);
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
-    public static void  payAndGetTicket(Client client) {
+    public static synchronized void  payAndGetTicket(Client client) {
         Ticket ticket = selectTicket(tickets);
         if (ticket == null) return;
        // delay(10);
@@ -95,7 +89,13 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("Hello world!");
-
+        tickets = new ArrayList<>(Arrays.asList(
+                new Ticket(1, 120, false),
+                new Ticket(2, 130,false),
+                new Ticket(3, 150,false),
+                new Ticket(4, 110,false),
+                new Ticket(5,50, true)
+        ));
 
         List<Client> clients = new ArrayList<>(Arrays.asList(
                 new Client("John", 500),
@@ -105,6 +105,7 @@ public class Main {
                 new Client("Freddie", 1000)
         ));
 
+        //
         for (int i = 0; i < clients.size(); i++) {
             useThread(clients.get(i));
 
