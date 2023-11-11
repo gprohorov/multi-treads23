@@ -16,9 +16,9 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-    public static List<Ticket> sellOut = new ArrayList<>();
+    public static  List<Ticket> sellOut = new ArrayList<>();
 
-    public static  volatile List<Ticket> tickets = new ArrayList<>();
+    public static   List<Ticket> tickets = new ArrayList<>();
     public static int takings = 0;
 
     public static void randomDelay(int from, int to) {
@@ -48,7 +48,7 @@ public class Main {
 //----------------------------------------------------------------------------------------
     public static void fillTicketBoxAsThread()  {
         Runnable task = () -> {
-            delay(3);
+         //   delay(3);
             tickets.add(new Ticket(1, 120, false));
             tickets.add(new Ticket(2, 130, false));
             tickets.add(new Ticket(3, 150, false));
@@ -61,7 +61,7 @@ public class Main {
   ;
 
     }
-    public static Ticket selectTicket(List<Ticket> tickets) {
+    public static  Ticket selectTicket(List<Ticket> tickets) {
     randomDelay(0,5);
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
@@ -77,23 +77,28 @@ public class Main {
     }
 
     public static void getTicket(Client client, Ticket ticket) {
-        // delay(5);
+        delay(5);
         tickets.remove(ticket);
         ticket.setSold(true);
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
     public static synchronized void  payAndGetTicket(Client client) {
-        Ticket ticket = selectTicket(tickets);
-        if (ticket == null) return;
-        pay(client, ticket);
-        getTicket(client, ticket);
 
-        System.out.println(client.getName() + " "
-                + ticket.getPlace() + " place");
+            Ticket ticket = selectTicket(tickets);
+            if (ticket == null) return;
+            pay(client, ticket);
+
+                getTicket(client, ticket);
+
+
+            System.out.println(client.getName() + " "
+                    + ticket.getPlace() + " place");
+
     }
     public static void useThread(Client client) {
         Runnable task = () -> {
+
             payAndGetTicket(client);
         };
         Thread thread = new Thread(task, client.getName());
