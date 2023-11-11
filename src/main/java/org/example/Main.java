@@ -51,9 +51,9 @@ public class Main {
             Thread.currentThread().interrupt();
         }
     }
-
+//----------------------------------------------------------------------------------------
     public static Ticket selectTicket(List<Ticket> tickets) {
-
+        delay(1);
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
                 .findFirst()
@@ -62,11 +62,13 @@ public class Main {
     public static void pay(Client client, Ticket ticket) {
         int price = ticket.getPrice();
         int clientMoney = client.getMoney();
+
         client.setMoney(clientMoney - price);
         takings += price;
     }
 
     public static void getTicket(Client client, Ticket ticket) {
+        delayMs(10);
         tickets.remove(ticket);
         ticket.setSold(true);
         sellOut.add(ticket);
