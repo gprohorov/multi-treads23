@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class Main {
     public static List<Ticket> sellOut = new ArrayList<>();
 
-    public static  volatile List<Ticket> tickets;
+    public static  volatile List<Ticket> tickets = new ArrayList<>();
     public static int takings = 0;
 
     public static void randomDelay(int from, int to) {
@@ -46,8 +46,23 @@ public class Main {
         }
     }
 //----------------------------------------------------------------------------------------
+    public static void fillTicketBoxAsThread()  {
+        Runnable task = () -> {
+            delay(3);
+            tickets.add(new Ticket(1, 120, false));
+            tickets.add(new Ticket(2, 130, false));
+            tickets.add(new Ticket(3, 150, false));
+            tickets.add(new Ticket(4, 110, false));
+        };
+        Thread thread = new Thread(task, " TicketBox ");
+        thread.start();
+        System.out.println(thread.getName() + " started");
+
+  ;
+
+    }
     public static Ticket selectTicket(List<Ticket> tickets) {
-        delay(1);
+    randomDelay(0,5);
         return tickets.stream()
                 .filter(ticket -> ticket.isSold() == false)
                 .findFirst()
@@ -62,7 +77,7 @@ public class Main {
     }
 
     public static void getTicket(Client client, Ticket ticket) {
-         delay(5);
+        // delay(5);
         tickets.remove(ticket);
         ticket.setSold(true);
         sellOut.add(ticket);
@@ -71,7 +86,6 @@ public class Main {
     public static synchronized void  payAndGetTicket(Client client) {
         Ticket ticket = selectTicket(tickets);
         if (ticket == null) return;
-       // delay(10);
         pay(client, ticket);
         getTicket(client, ticket);
 
@@ -89,13 +103,8 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("Hello world!");
-        tickets = new ArrayList<>(Arrays.asList(
-                new Ticket(1, 120, false),
-                new Ticket(2, 130,false),
-                new Ticket(3, 150,false),
-                new Ticket(4, 110,false),
-                new Ticket(5,50, true)
-        ));
+
+
 
         List<Client> clients = new ArrayList<>(Arrays.asList(
                 new Client("John", 500),
@@ -104,12 +113,12 @@ public class Main {
                 new Client("Ringo", 250),
                 new Client("Freddie", 1000)
         ));
+ fillTicketBoxAsThread();
+ useThread(clients.get(0));
+ useThread(clients.get(1));
+ useThread(clients.get(2));
+ useThread(clients.get(3));
 
-        //
-        for (int i = 0; i < clients.size(); i++) {
-            useThread(clients.get(i));
-
-        }
         System.out.println("-------------------------");
 
 
