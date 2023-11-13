@@ -11,7 +11,10 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Data
 public class TicketService {
@@ -19,7 +22,9 @@ public class TicketService {
     private List<Ticket> soldTickets = new ArrayList<>();
     private List<Client> clients;
     private int takings = 0;
-    private boolean loading = false;
+    private boolean uploaded = false;
+    private ReentrantLock locker = new ReentrantLock();
+    private Condition condition = locker.newCondition();
 
     public synchronized void loadTickets() {
         tickets.add(new Ticket(1, 120, false));
@@ -30,15 +35,20 @@ public class TicketService {
     }
     public  void loadTicketBoxAsThread(int interval)  {
         Runnable task = () -> {
-            synchronized (tickets) {
+            locker.lock();
+            try {
                 MyUtils.delay(interval);
                 tickets.add(new Ticket(1, 120, false));
                 tickets.add(new Ticket(2, 130, false));
                 tickets.add(new Ticket(3, 150, false));
                 tickets.add(new Ticket(4, 110, false));
+                uploaded = true;
+                condition.signalAll();
                 System.out.println(" Tickets are ready for sale via thread");
-;
+            } finally{
+                locker.unlock();
             }
+
 
         };
         Thread thread = new Thread(task, " TicketBox ");
@@ -46,18 +56,16 @@ public class TicketService {
         System.out.println(thread.getName() + " started");
     }
 
-    public  Ticket selectOne()  {
+    public  Ticket selectOne() throws InterruptedException {
         Ticket ticket = null;
         System.out.println("Somebody is trying to get a  ticket");
-            synchronized (tickets) {
-                try {
-                    tickets.wait(1);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+        locker.lock();
+         while (!uploaded)
+                 condition.await();
+
                 ticket = tickets.stream()
                         .findFirst().orElse(null);
-            }
+        locker.unlock();
         return ticket;
     }
 
@@ -74,7 +82,7 @@ public class TicketService {
             System.out.println("Success : " + client.getName() + ": " + ticket.getPlace());
     }
 
-    public  void serveClient(Client client)  {
+    public  void serveClient(Client client) throws InterruptedException {
 
         MyUtils.delay(1);
 
