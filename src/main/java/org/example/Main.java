@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
@@ -62,25 +63,30 @@ public class Main {
     }
 
     public static void getTicket(Client client, Ticket ticket) {
-         delay(5);
+         delayMs(1000);
         tickets.remove(ticket);
         ticket.setSold(true);
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
-    public static synchronized void  payAndGetTicket(Client client) {
+    public static  void  payAndGetTicket(Client client) {
         Ticket ticket = selectTicket(tickets);
         if (ticket == null) return;
-       // delay(10);
         pay(client, ticket);
         getTicket(client, ticket);
 
         System.out.println(client.getName() + " "
                 + ticket.getPlace() + " place");
     }
-    public static void useThread(Client client) {
+    public static void useThread(Client client, Semaphore semaphore) {
         Runnable task = () -> {
-            payAndGetTicket(client);
+            try {
+                semaphore.acquire();
+                payAndGetTicket(client);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            semaphore.release();
         };
         Thread thread = new Thread(task, client.getName());
         thread.start();
@@ -89,6 +95,7 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("Hello world!");
+        Semaphore semaphore = new Semaphore(1);
         tickets = new ArrayList<>(Arrays.asList(
                 new Ticket(1, 120, false),
                 new Ticket(2, 130,false),
@@ -107,7 +114,7 @@ public class Main {
 
         //
         for (int i = 0; i < clients.size(); i++) {
-            useThread(clients.get(i));
+            useThread(clients.get(i), semaphore);
 
         }
         System.out.println("-------------------------");
