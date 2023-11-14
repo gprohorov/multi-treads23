@@ -57,13 +57,14 @@ public class TicketService {
     }
 
     public  Ticket selectOne() throws InterruptedException {
-        Ticket ticket = null;
+   //     Ticket ticket = null;
         System.out.println("Somebody is trying to get a  ticket");
         locker.lock();
-         while (!uploaded)
-                 condition.await();
-
-                ticket = tickets.stream()
+         while (!uploaded) {
+             System.out.println("waiting ...");
+             condition.await();
+         }
+        Ticket  ticket = tickets.stream()
                         .findFirst().orElse(null);
         locker.unlock();
         return ticket;
