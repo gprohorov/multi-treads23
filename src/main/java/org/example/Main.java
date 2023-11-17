@@ -14,13 +14,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Main {
     public static List<Ticket> sellOut = new ArrayList<>();
 
     public static  volatile List<Ticket> tickets = new ArrayList<>();
     public static int takings = 0;
-    public static boolean uploaded = false;
+    public static boolean uploaded;
+    public static ReentrantLock locker = new ReentrantLock(true);
+    public static Condition condition = locker.newCondition();
 
     public static void randomDelay(int from, int to) {
         Random random = new Random();
@@ -49,52 +53,45 @@ public class Main {
     }
 //----------------------------------------------------------------------------------------
 
-    public static void uploadTickets(){
-        delay(5);
-        tickets = new ArrayList<>(Arrays.asList(
-                new Ticket(1, 120, false),
-                new Ticket(2, 130,false),
-                new Ticket(3, 150,false),
-                new Ticket(4, 110,false),
-                new Ticket(5,50, true)
-        ));
-        System.out.println(" Tickets are uploaded!");
-    }
 
     public static void uploadThread(int ms) {
         Runnable task = () -> {
             System.out.println("Uploading ...");
             delayMs(ms);
-            synchronized (tickets) {
+            locker.lock();
+            try {
                 tickets.add(new Ticket(1, 120,false));
                 tickets.add(new Ticket(2, 130,false));
                 tickets.add(new Ticket(3, 150,false));
                 tickets.add(new Ticket(4, 110, false));
                 tickets.add(new Ticket(5, 50, true));
                 uploaded = true;
-                tickets.notifyAll();
                 System.out.println(" --------UPLOADED ---------");
+            } finally {
+                locker.unlock();
             }
         };
         Thread thread = new Thread(task, " Upload process");
         thread.start();
     }
 
-    public static Ticket selectTicket(List<Ticket> tickets, int sec) {
+    public static Ticket selectTicket(List<Ticket> tickets, Client client ,int sec) {
+        delay(sec);
         Ticket result = null;
-        synchronized (tickets) {
-            while (!uploaded) {
-                try {
-                    tickets.wait();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+           locker.lock();
+        while (!uploaded) {
+            System.out.println(client.getName() + " is waiting ... ");
+            try {
+                condition.await(1, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            result = tickets.stream()
+        }
+        result = tickets.stream()
                     .filter(ticket -> ticket.isSold() == false)
                     .findFirst()
                     .orElse(null);
-        }
+        locker.unlock();
         return result;
     }
     public static void pay(Client client, Ticket ticket) {
@@ -111,8 +108,8 @@ public class Main {
         sellOut.add(ticket);
         client.setTicket(ticket);
     }
-    public static synchronized void  payAndGetTicket(Client client, int sec) {
-        Ticket ticket = selectTicket(tickets, sec);
+    public static  void  payAndGetTicket(Client client, int sec) {
+        Ticket ticket = selectTicket(tickets, client,  sec);
         if (ticket == null) {
             System.out.println("---- " + client.getName() + " FAILED");
             return;}
